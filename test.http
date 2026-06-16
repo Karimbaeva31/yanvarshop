@@ -1,0 +1,42 @@
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "fullname": "Zarina Test",
+  "email": "zarina@test.com",
+  "password": "123456"
+}
+
+###
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "zarina@test.com",
+  "password": "123456"
+}
+
+###
+POST http://localhost:3000/products
+Content-Type: application/json
+Authorization: Bearer eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwicm9sZWlkIjoxLCJpYXQiOjE3NjYwMTA4MDEsImV4cCI6MTc2NjA5NzIwMX0.uEPKWu1U8Mvdr6YMiHbnnQh8QA_ETzrkdCVwTifvT7Q
+
+{
+  "title": "Яблоки",
+  "price": 120,
+  "categoryid": 2
+}
+
+###
+POST http://localhost:3000/cart
+Content-Type: application/json
+Authorization: Bearer I1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwicm9sZWlkIjoxLCJpYXQiOjE3NjU4MjMwNDksImV4cCI6MTc2NTkwOTQ0OX0.m7D9stITKMONKCVvXfH4k-d1hID0PiEY8RBlqnEYGyo
+
+{
+  "productid": 1,
+  "quantity": 2
+}
+
+###
+GET http://localhost:3000/carteyJhbGciOiJIUz
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwicm9sZWlkIjoxLCJpYXQiOjE3NjYwMTA4MDEsImV4cCI6MTc2NjA5NzIwMX0.uEPKWu1U8Mvdr6YMiHbnnQh8QA_ETzrkdCVwTifvT7Q
