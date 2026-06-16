@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали заказа - Январь</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-container { max-width: 800px; margin: 30px auto; }
+        .order-card { background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .items-list { margin-top: 20px; }
+        .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; }
+        .total-row { font-size: 20px; font-weight: bold; color: #2ecc71; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
+        .status { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-new { background: #3498db; color: white; }
+        .status-processing { background: #f39c12; color: white; }
+        .status-shipped { background: #2ecc71; color: white; }
+        .status-delivered { background: #27ae60; color: white; }
+        .status-cancelled { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-top">
+                <div class="logo"><h1><a href="index.html" style="color:#2ecc71;text-decoration:none;">Январь</a></h1></div>
+                <div class="user-actions">
+                    <a href="profile.html" style="color:#3498db;text-decoration:none;margin-right:15px;"><i class="fas fa-user"></i> Личный кабинет</a>
+                    <a href="catalog.html" style="color:#3498db;text-decoration:none;margin-right:15px;"><i class="fas fa-shopping-bag"></i> Каталог</a>
+                    <div id="auth-buttons"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content container">
+        <a href="orders.html" class="back-link"><i class="fas fa-arrow-left"></i> К заказам</a>
+        <div id="order-details" class="details-container">
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p>Загрузка деталей заказа...</p>
+            </div>
+        </div>
+    </main>
+    <script src="js/api.js"></script>
+    <script>
+        async function loadOrderDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('id');
+            
+            if (!orderId) {
+                window.location.href = 'orders.html';
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                console.log(`🔍 Загрузка заказа #${orderId}...`);
+                
+                const response = await fetch(`http://localhost:3000/orders/${orderId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log("Данные заказа:", data);
+                
+                const order = data.order;
+                const items = data.items || [];
+                
+                const statusText = {
+                    'new': '🆕 Новый',
+                    'processing': '⚙️ В обработке',
+                    'shipped': '📦 Отправлен',
+                    'delivered': '✅ Доставлен',
+                    'cancelled': '❌ Отменен'
+                };
+                
+                const statusClass = `status-${order.status || 'new'}`;
+                const statusName = statusText[order.status] || '🆕 Новый';
+                const orderDate = new Date(order.created_at).toLocaleString('ru-RU');
+                
+                document.getElementById('order-details').innerHTML = `
+                    <div class="order-card">
+                        <h2><i class="fas fa-receipt"></i> Заказ #${order.orderid}</h2>
+                        <div style="margin: 15px 0;">
+                            <span class="status ${statusClass}">${statusName}</span>
+                        </div>
+                        <p><strong>📅 Дата:</strong> ${orderDate}</p>
+                        <p><strong>🚚 Адрес доставки:</strong> ${order.address || 'Не указан'}</p>
+                        <p><strong>💳 Способ оплаты:</strong> ${order.payment_method || 'Не выбран'}</p>
+                        ${order.comment ? `<p><strong>📝 Комментарий:</strong> ${order.comment}</p>` : ''}
+                        
+                        <h3 style="margin-top: 25px;"><i class="fas fa-box"></i> Товары в заказе:</h3>
+                        <div class="items-list">
+                            ${items.map(item => `
+                                <div class="item-row">
+                                    <span>${item.title} × ${item.quantity} шт.</span>
+                                    <span>${(item.price * item.quantity).toFixed(2)} ₽</span>
+                                </div>
+                            `).join('')}
+                            <div class="item-row total-row">
+                                <span><strong>Итого:</strong></span>
+                                <span><strong>${parseFloat(order.total).toFixed(2)} ₽</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('order-details').innerHTML = `
+                    <div class="order-card" style="text-align: center;">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="color: #e74c3c;"></i>
+                        <h3>Ошибка загрузки заказа</h3>
+                        <p>${error.message}</p>
+                        <button onclick="loadOrderDetails()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            <i class="fas fa-redo"></i> Попробовать снова
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function checkAuth() {
+            const authButtons = document.getElementById('auth-buttons');
+            const token = localStorage.getItem('token');
+            if (token) {
+                authButtons.innerHTML = `<button onclick="logout()" style="background:#e74c3c;color:white;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;">Выйти</button>`;
+            } else {
+                authButtons.innerHTML = `<a href="login.html" style="color:#3498db;text-decoration:none;">Войти</a>`;
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('cartCount');
+            window.location.href = 'index.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrderDetails();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
